@@ -25,7 +25,9 @@
 // TODO: when we will be ready for the release #![deny(missing_docs)]
 
 #[macro_use]
-extern crate amplify_derive;
+extern crate amplify;
+#[macro_use]
+extern crate strict_encoding;
 #[macro_use]
 extern crate lightning_encoding;
 

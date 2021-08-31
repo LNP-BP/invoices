@@ -26,16 +26,16 @@ use bitcoin::hashes::sha256t;
 use bitcoin::hashes::{sha256d, Hash};
 use bitcoin::secp256k1::{self, PublicKey, Signature};
 use bitcoin::Address;
-use internet2::tlv;
 use lnp::features::InitFeatures;
 use lnp::payment::ShortChannelId;
 use lnpbp::bech32::{self, Blob, FromBech32Str, ToBech32String};
 use lnpbp::chain::{AssetId, Chain};
-use lnpbp::client_side_validation::MerkleNode;
-use lnpbp::seals::OutpointHash;
+use bp::seals::OutpointHash;
 use miniscript::{descriptor::DescriptorPublicKey, Descriptor};
 use strict_encoding::{StrictDecode, StrictEncode};
-use wallet::{HashLock, Psbt};
+use wallet::{hlc::HashLock, psbt::Psbt};
+use std::collections::BTreeMap;
+use commit_verify::merkle::MerkleNode;
 
 // TODO: Derive `Eq` & `Hash` once Psbt will support them
 /// NB: Invoice fields are non-public since each time we update them we must
@@ -52,11 +52,13 @@ use wallet::{HashLock, Psbt};
     PartialEq,
     Debug,
     Display,
-    StrictEncode,
-    StrictDecode,
+    NetworkEncode,
+    NetworkDecode,
     LightningEncode,
     LightningDecode,
 )]
+#[network_encoding(use_tlv)]
+#[lightning_encoding(use_tlv)]
 #[display(Invoice::to_bech32_string)]
 pub struct Invoice {
     /// Version byte, always 0 for the initial version
@@ -74,12 +76,14 @@ pub struct Invoice {
 
     /// List of beneficiary ordered in most desirable-first order, which follow
     /// `beneficiary` value
-    #[tlv(type = 1)]
+    #[network_encoding(tlv = 1)]
+    #[lightning_encoding(tlv = 1)]
     alt_beneficiaries: Vec<Beneficiary>,
 
     /// AssetId can also be used to define blockchain. If it's empty it implies
     /// bitcoin mainnet
-    #[tlv(type = 2)]
+    #[network_encoding(tlv = 2)]
+    #[lightning_encoding(tlv = 2)]
     #[cfg_attr(
         feature = "serde",
         serde(with = "As::<Option<DisplayFromStr>>")
@@ -87,44 +91,53 @@ pub struct Invoice {
     asset: Option<AssetId>,
 
     /// Interval between recurrent payments
-    #[tlv(type = 3)]
+    #[network_encoding(tlv = 3)]
+    #[lightning_encoding(tlv = 3)]
     recurrent: Recurrent,
 
-    #[tlv(type = 4)]
+    #[network_encoding(tlv = 4)]
+    #[lightning_encoding(tlv = 4)]
     #[cfg_attr(
         feature = "serde",
         serde(with = "As::<Option<DisplayFromStr>>")
     )]
     expiry: Option<NaiveDateTime>, // Must be mapped to i64
 
-    #[tlv(type = 5)]
+    #[network_encoding(tlv = 5)]
+    #[lightning_encoding(tlv = 5)]
     quantity: Option<Quantity>,
 
     /// If the price of the asset provided by fiat provider URL goes below this
     /// limit the merchant will not accept the payment and it will become
     /// expired
-    #[tlv(type = 6)]
+    #[network_encoding(tlv = 6)]
+    #[lightning_encoding(tlv = 6)]
     currency_requirement: Option<CurrencyData>,
 
-    #[tlv(type = 7)]
+    #[network_encoding(tlv = 7)]
+    #[lightning_encoding(tlv = 7)]
     merchant: Option<String>,
 
-    #[tlv(type = 8)]
+    #[network_encoding(tlv = 8)]
+    #[lightning_encoding(tlv = 8)]
     purpose: Option<String>,
 
-    #[tlv(type = 9)]
+    #[network_encoding(tlv = 9)]
+    #[lightning_encoding(tlv = 9)]
     details: Option<Details>,
 
-    #[tlv(type = 0)]
+    #[network_encoding(tlv = 0)]
+    #[lightning_encoding(tlv = 0)]
     #[cfg_attr(
         feature = "serde",
         serde(with = "As::<Option<(DisplayFromStr, DisplayFromStr)>>")
     )]
     signature: Option<(PublicKey, Signature)>,
 
-    #[tlv(unknown)]
+    #[network_encoding(unknown_tlvs)]
+    #[lightning_encoding(unknown_tlvs)]
     #[cfg_attr(feature = "serde", serde(skip))]
-    unknown: tlv::Map,
+    unknown: BTreeMap<usize, Box<[u8]>>,
     /* TODO: Add RGB feature vec optional field
      * TODO: Add Bifrost server list as a TLV vec (empty if not provided) */
 }
@@ -511,6 +524,25 @@ impl lightning_encoding::Strategy for Recurrent {
 impl Default for Recurrent {
     fn default() -> Self {
         Recurrent::NonRecurrent
+    }
+}
+
+impl Recurrent {
+    #[inline]
+    pub fn iter(&self) -> Recurrent {
+        *self
+    }
+}
+
+impl Iterator for Recurrent {
+    type Item = Recurrent;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Recurrent::NonRecurrent => None,
+            _ => Some(*self)
+        }
     }
 }
 

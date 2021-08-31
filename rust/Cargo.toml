@@ -1,6 +1,6 @@
 [package]
 name = "lnpbp-invoice"
-version = "0.1.0"
+version = "0.2.0-beta.1"
 license = "MIT"
 authors = ["Dr. Maxim Orlovsky <orlovsky@pandoracore.com>"]
 description = "LNP/BP universal invoices library implementing LNPBP-38 standard"
@@ -8,7 +8,7 @@ repository = "https://github.com/LNP-BP/rust-lnpbp"
 homepage = "https://github.com/LNP-BP"
 keywords = ["bitcoin", "lightning", "lnp-bp", "rgb", "invoice"]
 categories = ["cryptography::cryptocurrencies"]
-readme = "README.md"
+readme = "../README.md"
 edition = "2018"
 
 [[bin]]
@@ -24,31 +24,31 @@ crate-type = ["rlib", "staticlib"]
 [dependencies]
 # Dependencies on other LNP/BP repositories
 # -----------------------------------------
-amplify = { version = "3", features = ["stringly_conversions", "std"] }
-amplify_derive = "2.4.3"
-strict_encoding = { version = "1.0.6", features = ["miniscript"] }
-strict_encoding_derive = { version = "1" }
-lightning_encoding = "0.4.0-beta.1"
-descriptor-wallet = { version = "0.4", features = ["keygen"] }
-internet2 = "0.3.10"
-lnpbp = "0.4"
-lnp-core = "0.3.1"
-rgb-core = { version = "0.4", optional = true }
+amplify = "3.9.1"
+strict_encoding = { version = "1.7.4", features = ["miniscript"] }
+commit_verify = "0.5.11"
+lightning_encoding = "0.5.0-beta.2"
+descriptor-wallet = { version = "0.5.0-alpha.3", features = ["keygen"] }
+internet2 = "0.5.0-alpha.2"
+lnpbp = "0.5.0-beta.3"
+bp-core = "0.5.0-beta.5"
+lnp-core = "0.4.0-beta.3"
+rgb-core = { version = "0.5.0-alpha.1", optional = true }
 # Dependencies on core rust-bitcoin ecosystem projects
 # ----------------------------------------------------
-bitcoin = { version = "0.26", features = ["rand"] }
-miniscript = { version = "5", features = ["compiler"] }
+bitcoin = { version = "0.27", features = ["rand"] }
+miniscript = { version = "6.0.1", features = ["compiler"] }
 # Serialization
 # -------------
 base64-compat = { version = "1", optional = true } # Used by cli only
 base58 = { version = "0.1", optional = true } # Used by cli only
-bech32 = { version = "0", optional = true } # Used by cli only
+bech32 = { version = "0.8.1", optional = true } # Used by cli only
 serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
-serde_with = { version = "1.5", features = ["hex"], optional = true }
+serde_with = { version = "1.8", features = ["hex"], optional = true }
 serde_json = { version = "1", optional = true } # Used by cli only
 serde_yaml = { version = "0.8", optional = true } # Used by cli only
 toml = { version = "0.5", optional = true } # Used by cli only
-clap = { version = "3.0.0-beta.2", optional = true } # Used by cli only
+clap = { version = "3.0.0-beta.4", optional = true } # Used by cli only
 # Internal data representations
 # -----------------------------
 url = "2.2"
