@@ -28,6 +28,7 @@ use bitcoin::secp256k1::{self, schnorr};
 use bitcoin::Address;
 use bp::seals::txout::blind::ConcealedSeal;
 use commit_verify::merkle::MerkleNode;
+use internet2::addr::NodeAddr;
 use internet2::tlv;
 use lnp::p2p::bolt::{InitFeatures, ShortChannelId};
 use lnpbp::bech32::{self, Blob, FromBech32Str, ToBech32String};
@@ -36,6 +37,13 @@ use miniscript::{descriptor::DescriptorPublicKey, Descriptor};
 use rgb::NodeId;
 use strict_encoding::{StrictDecode, StrictEncode};
 use wallet::{hlc::HashLock, psbt::Psbt};
+
+/// Error when an RGB-only operation is attempted on a non-RGB invoice.
+#[derive(
+    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display, Error,
+)]
+#[display("the operation is supported only for RGB invoices")]
+pub struct NotRgbInvoice;
 
 /// NB: Invoice fields are non-public since each time we update them we must
 /// clear signature
@@ -60,7 +68,7 @@ pub struct Invoice {
     amount: AmountExt,
 
     /// Main beneficiary. Separating the first beneficiary into a standalone
-    /// field allows to ensure that there is always at lease one beneficiary
+    /// field allows to ensure that there is always at least one beneficiary
     /// at compile time
     beneficiary: Beneficiary,
 
@@ -114,10 +122,13 @@ pub struct Invoice {
     )]
     signature: Option<(secp256k1::PublicKey, schnorr::Signature)>,
 
+    /// List of nodes which are able to accept RGB consignment
+    #[network_encoding(tlv = 10)]
+    consignment_endpoints: Vec<NodeAddr>,
+
     #[network_encoding(unknown_tlvs)]
     #[cfg_attr(feature = "serde", serde(skip))]
     unknown: tlv::Stream,
-    /* TODO: Add Storm server list as a TLV vec (empty if not provided) */
 }
 
 impl bech32::Strategy for Invoice {
@@ -168,6 +179,7 @@ impl Invoice {
             purpose: None,
             details: None,
             signature: None,
+            consignment_endpoints: empty!(),
             unknown: Default::default(),
         }
     }
@@ -406,6 +418,20 @@ impl Invoice {
         return true;
     }
 
+    pub fn add_consignment_endpoint(
+        &mut self,
+        node: NodeAddr,
+    ) -> Result<bool, NotRgbInvoice> {
+        if !self.is_rgb() {
+            return Err(NotRgbInvoice);
+        }
+        if self.consignment_endpoints.contains(&node) {
+            return Ok(false);
+        }
+        self.consignment_endpoints.push(node);
+        Ok(true)
+    }
+
     pub fn signature_hash(&self) -> MerkleNode {
         // TODO: Change signature encoding algorithm to a merkle-tree based
         MerkleNode::hash(
@@ -562,8 +588,9 @@ pub enum Beneficiary {
     /// Lightning node receiving the payment. Not the same as lightning invoice
     /// since many of the invoice data now will be part of [`Invoice`] here.
     #[from]
-    Lightning(LnAddress),
+    Bolt(LnAddress),
 
+    // TODO: Add Bifrost invoices
     /// Fallback option for all future variants
     Unknown(
         #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
@@ -623,9 +650,9 @@ pub struct LnAddress {
     pub features: InitFeatures,
     #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
     pub lock: HashLock, /* When PTLC will be available the same field will
-                         * be re-used for them + the
-                         * use will be indicated with a
-                         * feature flag */
+                         * be re-used + the use of
+                         * PTCL will be indicated with
+                         * a feature flag */
     pub min_final_cltv_expiry: Option<u16>,
     pub path_hints: Vec<LnPathHint>,
 }
