@@ -37,7 +37,6 @@ use rgb::NodeId;
 use strict_encoding::{StrictDecode, StrictEncode};
 use wallet::{hlc::HashLock, psbt::Psbt};
 
-// TODO: Derive `Eq` & `Hash` once Psbt will support them
 /// NB: Invoice fields are non-public since each time we update them we must
 /// clear signature
 #[cfg_attr(
@@ -47,7 +46,7 @@ use wallet::{hlc::HashLock, psbt::Psbt};
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
 #[derive(
-    Getters, Clone, PartialEq, Debug, Display, NetworkEncode, NetworkDecode,
+    Getters, Clone, Eq, PartialEq, Debug, Display, NetworkEncode, NetworkDecode,
 )]
 #[network_encoding(use_tlv)]
 #[display(Invoice::to_bech32_string)]
@@ -147,14 +146,6 @@ impl PartialOrd for Invoice {
         Some(self.cmp(other))
     }
 }
-
-impl std::hash::Hash for Invoice {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.to_string().hash(state)
-    }
-}
-
-impl Eq for Invoice {}
 
 impl Invoice {
     pub fn new(
@@ -475,6 +466,7 @@ impl<'a> Iterator for BeneficiariesIter<'a> {
     Eq,
     PartialOrd,
     Ord,
+    Hash,
     Debug,
     Display,
     From,
@@ -534,7 +526,7 @@ impl Iterator for Recurrent {
     serde(crate = "serde_crate", rename = "lowercase", untagged)
 )]
 #[derive(
-    Clone, PartialEq, Debug, Display, From, StrictEncode, StrictDecode,
+    Clone, Eq, PartialEq, Debug, Display, From, StrictEncode, StrictDecode,
 )]
 #[display(inner)]
 #[non_exhaustive]
