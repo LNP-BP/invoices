@@ -216,26 +216,26 @@ where
 {
     let strict = data.strict_serialize().map_err(|err| err.to_string())?;
     match format {
-        Format::Debug => write!(f, "{:#?}", data),
-        Format::Bech32m => write!(f, "{}", data),
-        Format::Base58 => write!(f, "{}", strict.to_base58()),
-        Format::Base64 => write!(f, "{}", base64::encode(&strict)),
-        Format::Yaml => write!(
+        Format::Debug => writeln!(f, "{:#?}", data),
+        Format::Bech32m => writeln!(f, "{}", data),
+        Format::Base58 => writeln!(f, "{}", strict.to_base58()),
+        Format::Base64 => writeln!(f, "{}", base64::encode(&strict)),
+        Format::Yaml => writeln!(
             f,
             "{}",
             serde_yaml::to_string(&data)
                 .as_ref()
                 .map_err(serde_yaml::Error::to_string)?
         ),
-        Format::Json => write!(
+        Format::Json => writeln!(
             f,
             "{}",
             serde_json::to_string(&data)
                 .as_ref()
                 .map_err(serde_json::Error::to_string)?
         ),
-        Format::Hexadecimal => write!(f, "{}", strict.to_hex()),
-        Format::Rust => write!(f, "{:#04X?}", strict),
+        Format::Hexadecimal => writeln!(f, "{}", strict.to_hex()),
+        Format::Rust => writeln!(f, "{:#04X?}", strict),
         Format::Raw => data
             .strict_encode(f)
             .map(|_| ())
