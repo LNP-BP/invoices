@@ -33,7 +33,6 @@ use lnp::p2p::bolt::{InitFeatures, ShortChannelId};
 use lnpbp::bech32::{self, Blob, FromBech32Str, ToBech32String};
 use lnpbp::chain::{AssetId, Chain};
 use miniscript::{descriptor::DescriptorPublicKey, Descriptor};
-use rgb::NodeId;
 use strict_encoding::{StrictDecode, StrictEncode};
 use wallet::{hlc::HashLock, psbt::Psbt};
 
@@ -619,7 +618,7 @@ impl FromStr for Beneficiary {
 )]
 #[display("{node_id}")]
 pub struct LnAddress {
-    pub node_id: NodeId,
+    pub node_id: secp256k1::PublicKey,
     pub features: InitFeatures,
     #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
     pub lock: HashLock, /* When PTLC will be available the same field will
