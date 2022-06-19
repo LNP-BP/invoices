@@ -74,48 +74,48 @@ pub struct Invoice {
 
     /// List of beneficiary ordered in most desirable-first order, which follow
     /// `beneficiary` value
-    #[network_encoding(tlv = 1)]
+    #[network_encoding(tlv = 0x01)]
     alt_beneficiaries: Vec<Beneficiary>,
 
     /// AssetId can also be used to define blockchain. If it's empty it implies
     /// bitcoin mainnet
-    #[network_encoding(tlv = 2)]
+    #[network_encoding(tlv = 0x02)]
     #[cfg_attr(
         feature = "serde",
         serde(with = "As::<Option<DisplayFromStr>>")
     )]
     asset: Option<AssetId>,
 
-    /// Interval between recurrent payments
-    #[network_encoding(tlv = 3)]
-    recurrent: Recurrent,
-
-    #[network_encoding(tlv = 4)]
+    #[network_encoding(tlv = 0x03)]
     #[cfg_attr(
         feature = "serde",
         serde(with = "As::<Option<DisplayFromStr>>")
     )]
     expiry: Option<NaiveDateTime>, // Must be mapped to i64
 
-    #[network_encoding(tlv = 5)]
+    /// Interval between recurrent payments
+    #[network_encoding(tlv = 0x04)]
+    recurrent: Recurrent,
+
+    #[network_encoding(tlv = 0x06)]
     quantity: Option<Quantity>,
 
     /// If the price of the asset provided by fiat provider URL goes below this
     /// limit the merchant will not accept the payment and it will become
     /// expired
-    #[network_encoding(tlv = 6)]
+    #[network_encoding(tlv = 0x08)]
     currency_requirement: Option<CurrencyData>,
 
-    #[network_encoding(tlv = 7)]
+    #[network_encoding(tlv = 0x05)]
     merchant: Option<String>,
 
-    #[network_encoding(tlv = 8)]
+    #[network_encoding(tlv = 0x07)]
     purpose: Option<String>,
 
-    #[network_encoding(tlv = 9)]
+    #[network_encoding(tlv = 0x09)]
     details: Option<Details>,
 
-    #[network_encoding(tlv = 0)]
+    #[network_encoding(tlv = 0x00)]
     #[cfg_attr(
         feature = "serde",
         serde(with = "As::<Option<(DisplayFromStr, DisplayFromStr)>>")
@@ -123,7 +123,7 @@ pub struct Invoice {
     signature: Option<(secp256k1::PublicKey, schnorr::Signature)>,
 
     /// List of nodes which are able to accept RGB consignment
-    #[network_encoding(tlv = 10)]
+    #[network_encoding(tlv = 0x0a)]
     consignment_endpoints: Vec<NodeAddr>,
 
     #[network_encoding(unknown_tlvs)]
