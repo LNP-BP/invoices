@@ -24,7 +24,7 @@ use amplify::Wrapper;
 #[cfg(feature = "rgb")]
 use bitcoin::hashes::sha256t;
 use bitcoin::hashes::{sha256d, Hash};
-use bitcoin::secp256k1::{self, schnorr::Signature};
+use bitcoin::secp256k1::{self, schnorr};
 use bitcoin::Address;
 use bp::seals::txout::blind::ConcealedSeal;
 use commit_verify::merkle::MerkleNode;
@@ -112,13 +112,12 @@ pub struct Invoice {
         feature = "serde",
         serde(with = "As::<Option<(DisplayFromStr, DisplayFromStr)>>")
     )]
-    signature: Option<(secp256k1::PublicKey, Signature)>,
+    signature: Option<(secp256k1::PublicKey, schnorr::Signature)>,
 
     #[network_encoding(unknown_tlvs)]
     #[cfg_attr(feature = "serde", serde(skip))]
     unknown: tlv::Stream,
-    /* TODO: Add RGB feature vec optional field
-     * TODO: Add Bifrost server list as a TLV vec (empty if not provided) */
+    /* TODO: Add Storm server list as a TLV vec (empty if not provided) */
 }
 
 impl bech32::Strategy for Invoice {
@@ -419,7 +418,7 @@ impl Invoice {
     pub fn set_signature(
         &mut self,
         pubkey: secp256k1::PublicKey,
-        signature: Signature,
+        signature: schnorr::Signature,
     ) {
         self.signature = Some((pubkey, signature))
     }
