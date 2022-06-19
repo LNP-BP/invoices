@@ -28,13 +28,12 @@ use bitcoin::secp256k1::{self, schnorr};
 use bitcoin::Address;
 use bp::seals::txout::blind::ConcealedSeal;
 use commit_verify::merkle::MerkleNode;
-use internet2::addr::NodeAddr;
+use internet2::addr::{NodeAddr, NodeId};
 use internet2::tlv;
 use lnp::p2p::bolt::{InitFeatures, ShortChannelId};
 use lnpbp::bech32::{self, Blob, FromBech32Str, ToBech32String};
 use lnpbp::chain::{AssetId, Chain};
 use miniscript::{descriptor::DescriptorPublicKey, Descriptor};
-use rgb::NodeId;
 use strict_encoding::{StrictDecode, StrictEncode};
 use wallet::{hlc::HashLock, psbt::Psbt};
 
@@ -681,8 +680,7 @@ pub struct LnAddress {
 )]
 #[display("{short_channel_id}@{node_id}")]
 pub struct LnPathHint {
-    #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
-    pub node_id: secp256k1::PublicKey,
+    pub node_id: NodeId,
     #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
     pub short_channel_id: ShortChannelId,
     pub fee_base_msat: u32,
