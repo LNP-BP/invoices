@@ -501,10 +501,6 @@ pub enum Recurrent {
     Years(u8),
 }
 
-impl lightning_encoding::Strategy for Recurrent {
-    type Strategy = lightning_encoding::strategies::AsStrict;
-}
-
 impl Default for Recurrent {
     fn default() -> Self {
         Recurrent::NonRecurrent
@@ -582,10 +578,6 @@ pub enum Beneficiary {
         #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
         Blob,
     ),
-}
-
-impl lightning_encoding::Strategy for Beneficiary {
-    type Strategy = lightning_encoding::strategies::AsStrict;
 }
 
 #[derive(
@@ -711,10 +703,6 @@ impl Default for AmountExt {
     fn default() -> Self {
         AmountExt::Any
     }
-}
-
-impl lightning_encoding::Strategy for AmountExt {
-    type Strategy = lightning_encoding::strategies::AsStrict;
 }
 
 impl AmountExt {

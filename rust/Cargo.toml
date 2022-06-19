@@ -27,7 +27,6 @@ crate-type = ["rlib", "staticlib"]
 amplify = "3.12.0"
 strict_encoding = { version = "1.8.8", features = ["miniscript"] }
 commit_verify = "0.7.0"
-lightning_encoding = "0.7.1"
 descriptor-wallet = { version = "0.7.1", features = ["keygen"] }
 internet2 = "0.7.0"
 lnpbp = "0.7.0"

@@ -1035,7 +1035,6 @@ dependencies = [
  "commit_verify",
  "descriptor-wallet",
  "internet2",
- "lightning_encoding",
  "lnp-core",
  "lnpbp",
  "miniscript",
