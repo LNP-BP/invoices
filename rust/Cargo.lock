@@ -1022,7 +1022,7 @@ dependencies = [
 
 [[package]]
 name = "lnpbp-invoice"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "amplify",
  "base58",
