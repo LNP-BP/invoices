@@ -23,6 +23,8 @@ use std::str::FromStr;
 
 use base58::{FromBase58, ToBase58};
 use bitcoin::hashes::hex::{self, FromHex, ToHex};
+use bitcoin::OutPoint;
+use bp::seals::txout::blind::RevealedSeal;
 use invoice::{Beneficiary, Invoice};
 use lnpbp::chain::AssetId;
 use strict_encoding::{StrictDecode, StrictEncode};
@@ -69,6 +71,7 @@ pub enum Command {
         output: Format,
     },
 
+    /// Converts RGB asset id between representations
     RgbConvert {
         /// Asset id in any format
         asset: Option<String>,
@@ -80,6 +83,12 @@ pub enum Command {
         /// Formatting for the output invoice data
         #[clap(short, long, default_value = "bech32")]
         output: Format,
+    },
+
+    /// Creates blinded UTXO representation from a given outpoint
+    Conceal {
+        /// UTXO to conceal
+        outpoint: OutPoint,
     },
 }
 
@@ -265,6 +274,11 @@ fn main() -> Result<(), String> {
         } => {
             let asset: rgb::ContractId = input_read(asset, input)?;
             output_write(io::stdout(), asset, output)?;
+        }
+        Command::Conceal { outpoint } => {
+            let seal = RevealedSeal::from(outpoint);
+            println!("{}", seal);
+            println!("{}", seal.to_concealed_seal());
         }
     }
 
