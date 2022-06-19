@@ -11,9 +11,11 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/MIT>.
 
+#[macro_use]
+extern crate clap;
 extern crate serde_crate as serde;
 
-use clap::{AppSettings, Clap};
+use clap::Parser;
 use serde::Serialize;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::io::{self, Read};
@@ -24,14 +26,13 @@ use bitcoin::hashes::hex::{self, FromHex, ToHex};
 use invoice::Invoice;
 use strict_encoding::{StrictDecode, StrictEncode};
 
-#[derive(Clap, Clone, Debug)]
+#[derive(Parser, Clone, Debug)]
 #[clap(
     name = "invoice",
     bin_name = "invoice",
     author,
     version,
-    about = "Command-line tool for working with LNP/BP invoicing",
-    setting = AppSettings::ColoredHelp,
+    about = "Command-line tool for working with LNP/BP invoicing"
 )]
 pub struct Opts {
     /// Command to execute
@@ -39,8 +40,7 @@ pub struct Opts {
     pub command: Command,
 }
 
-#[derive(Clap, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-#[clap(setting = AppSettings::ColoredHelp)]
+#[derive(Subcommand, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Command {
     /// Converting between different representations of invoice data
     Convert {
@@ -71,7 +71,7 @@ pub enum Command {
 }
 
 /// Formatting of the data
-#[derive(Clap, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(ArgEnum, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub enum Format {
     /// Format according to the rust debug rules
     Debug,

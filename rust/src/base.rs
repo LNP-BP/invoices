@@ -24,18 +24,18 @@ use amplify::Wrapper;
 #[cfg(feature = "rgb")]
 use bitcoin::hashes::sha256t;
 use bitcoin::hashes::{sha256d, Hash};
-use bitcoin::secp256k1::{self, PublicKey, Signature};
+use bitcoin::secp256k1::{self, schnorr::Signature};
 use bitcoin::Address;
-use lnp::features::InitFeatures;
-use lnp::payment::ShortChannelId;
+use bp::seals::txout::blind::ConcealedSeal;
+use commit_verify::merkle::MerkleNode;
+use internet2::tlv;
+use lnp::p2p::bolt::{InitFeatures, ShortChannelId};
 use lnpbp::bech32::{self, Blob, FromBech32Str, ToBech32String};
 use lnpbp::chain::{AssetId, Chain};
-use bp::seals::OutpointHash;
 use miniscript::{descriptor::DescriptorPublicKey, Descriptor};
+use rgb::NodeId;
 use strict_encoding::{StrictDecode, StrictEncode};
 use wallet::{hlc::HashLock, psbt::Psbt};
-use std::collections::BTreeMap;
-use commit_verify::merkle::MerkleNode;
 
 // TODO: Derive `Eq` & `Hash` once Psbt will support them
 /// NB: Invoice fields are non-public since each time we update them we must
@@ -113,12 +113,11 @@ pub struct Invoice {
         feature = "serde",
         serde(with = "As::<Option<(DisplayFromStr, DisplayFromStr)>>")
     )]
-    signature: Option<(PublicKey, Signature)>,
+    signature: Option<(secp256k1::PublicKey, Signature)>,
 
     #[network_encoding(unknown_tlvs)]
-    #[lightning_encoding(unknown_tlvs)]
     #[cfg_attr(feature = "serde", serde(skip))]
-    unknown: BTreeMap<usize, Box<[u8]>>,
+    unknown: tlv::Stream,
     /* TODO: Add RGB feature vec optional field
      * TODO: Add Bifrost server list as a TLV vec (empty if not provided) */
 }
@@ -426,7 +425,11 @@ impl Invoice {
         )
     }
 
-    pub fn set_signature(&mut self, pubkey: PublicKey, signature: Signature) {
+    pub fn set_signature(
+        &mut self,
+        pubkey: secp256k1::PublicKey,
+        signature: Signature,
+    ) {
         self.signature = Some((pubkey, signature))
     }
 
@@ -522,7 +525,7 @@ impl Iterator for Recurrent {
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             Recurrent::NonRecurrent => None,
-            _ => Some(*self)
+            _ => Some(*self),
         }
     }
 }
@@ -552,13 +555,11 @@ pub enum Beneficiary {
     /// client-validated data to them (like in RGB). We always hide the real
     /// UTXO behind the hashed version (using some salt)
     #[from]
-    BlindUtxo(
-        #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
-        OutpointHash,
-    ),
+    BlindUtxo(ConcealedSeal),
 
     /// Miniscript-based descriptors allowing custom derivation & key
     /// generation
+    // TODO: Use Tracking account here
     #[from]
     Descriptor(
         #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
@@ -603,7 +604,7 @@ impl FromStr for Beneficiary {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Ok(address) = Address::from_str(s) {
             Ok(Beneficiary::Address(address))
-        } else if let Ok(outpoint) = OutpointHash::from_str(s) {
+        } else if let Ok(outpoint) = ConcealedSeal::from_str(s) {
             Ok(Beneficiary::BlindUtxo(outpoint))
         } else if let Ok(descriptor) =
             Descriptor::<DescriptorPublicKey>::from_str(s)
@@ -635,8 +636,7 @@ impl FromStr for Beneficiary {
 )]
 #[display("{node_id}")]
 pub struct LnAddress {
-    #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
-    pub node_id: secp256k1::PublicKey,
+    pub node_id: NodeId,
     pub features: InitFeatures,
     #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
     pub lock: HashLock, /* When PTLC will be available the same field will
