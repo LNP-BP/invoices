@@ -23,7 +23,8 @@ use std::str::FromStr;
 
 use base58::{FromBase58, ToBase58};
 use bitcoin::hashes::hex::{self, FromHex, ToHex};
-use invoice::Invoice;
+use invoice::{Beneficiary, Invoice};
+use lnpbp::chain::AssetId;
 use strict_encoding::{StrictDecode, StrictEncode};
 
 #[derive(Parser, Clone, Debug)]
@@ -40,8 +41,20 @@ pub struct Opts {
     pub command: Command,
 }
 
-#[derive(Subcommand, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Subcommand, Clone, PartialEq, Eq, Debug)]
 pub enum Command {
+    /// Creates new invoice
+    Create {
+        /// Beneficiary data
+        beneficiary: Beneficiary,
+
+        /// Amount, in satoshis or smallest asset division
+        amount: Option<u64>,
+
+        /// Asset, if not Bitcoin
+        asset: Option<rgb::ContractId>,
+    },
+
     /// Converting between different representations of invoice data
     Convert {
         /// Invoice data; if none are given reads from STDIN
@@ -77,7 +90,7 @@ pub enum Format {
     Debug,
 
     /// Format using Bech32 representation
-    Bech32,
+    Bech32m,
 
     /// Format using Base58 encoding
     Base58,
@@ -107,7 +120,7 @@ impl Display for Format {
             Format::Debug => f.write_str("debug"),
             Format::Base58 => f.write_str("base58"),
             Format::Base64 => f.write_str("base64"),
-            Format::Bech32 => f.write_str("bech32"),
+            Format::Bech32m => f.write_str("bech32"),
             Format::Yaml => f.write_str("yaml"),
             Format::Json => f.write_str("json"),
             Format::Hexadecimal => f.write_str("hex"),
@@ -125,7 +138,7 @@ impl FromStr for Format {
             "debug" => Format::Debug,
             "base58" => Format::Base58,
             "base64" => Format::Base64,
-            "bech32" => Format::Bech32,
+            "bech32" => Format::Bech32m,
             "yaml" => Format::Yaml,
             "json" => Format::Json,
             "hex" => Format::Hexadecimal,
@@ -154,7 +167,7 @@ where
         })?;
     let s = &String::from_utf8_lossy(&data);
     Ok(match format {
-        Format::Bech32 => T::from_str(s).map_err(|err| err.to_string())?,
+        Format::Bech32m => T::from_str(s).map_err(|err| err.to_string())?,
         Format::Base58 => {
             T::strict_deserialize(s.from_base58().map_err(|err| {
                 format!("Incorrect Base58 encoding: {:?}", err)
@@ -195,7 +208,7 @@ where
     let strict = data.strict_serialize().map_err(|err| err.to_string())?;
     match format {
         Format::Debug => write!(f, "{:#?}", data),
-        Format::Bech32 => write!(f, "{}", data),
+        Format::Bech32m => write!(f, "{}", data),
         Format::Base58 => write!(f, "{}", strict.to_base58()),
         Format::Base64 => write!(f, "{}", base64::encode(&strict)),
         Format::Yaml => write!(
@@ -228,6 +241,15 @@ fn main() -> Result<(), String> {
     let opts = Opts::parse();
 
     match opts.command {
+        Command::Create {
+            beneficiary,
+            amount,
+            asset,
+        } => {
+            let invoice =
+                Invoice::new(beneficiary, amount, asset.map(AssetId::from));
+            output_write(io::stdout(), invoice, Format::Bech32m)?;
+        }
         Command::Convert {
             invoice,
             input,
