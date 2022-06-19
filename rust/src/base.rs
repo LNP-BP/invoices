@@ -47,18 +47,9 @@ use commit_verify::merkle::MerkleNode;
     serde(crate = "serde_crate", rename_all = "camelCase")
 )]
 #[derive(
-    Getters,
-    Clone,
-    PartialEq,
-    Debug,
-    Display,
-    NetworkEncode,
-    NetworkDecode,
-    LightningEncode,
-    LightningDecode,
+    Getters, Clone, PartialEq, Debug, Display, NetworkEncode, NetworkDecode,
 )]
 #[network_encoding(use_tlv)]
-#[lightning_encoding(use_tlv)]
 #[display(Invoice::to_bech32_string)]
 pub struct Invoice {
     /// Version byte, always 0 for the initial version
@@ -77,13 +68,11 @@ pub struct Invoice {
     /// List of beneficiary ordered in most desirable-first order, which follow
     /// `beneficiary` value
     #[network_encoding(tlv = 1)]
-    #[lightning_encoding(tlv = 1)]
     alt_beneficiaries: Vec<Beneficiary>,
 
     /// AssetId can also be used to define blockchain. If it's empty it implies
     /// bitcoin mainnet
     #[network_encoding(tlv = 2)]
-    #[lightning_encoding(tlv = 2)]
     #[cfg_attr(
         feature = "serde",
         serde(with = "As::<Option<DisplayFromStr>>")
@@ -92,11 +81,9 @@ pub struct Invoice {
 
     /// Interval between recurrent payments
     #[network_encoding(tlv = 3)]
-    #[lightning_encoding(tlv = 3)]
     recurrent: Recurrent,
 
     #[network_encoding(tlv = 4)]
-    #[lightning_encoding(tlv = 4)]
     #[cfg_attr(
         feature = "serde",
         serde(with = "As::<Option<DisplayFromStr>>")
@@ -104,30 +91,24 @@ pub struct Invoice {
     expiry: Option<NaiveDateTime>, // Must be mapped to i64
 
     #[network_encoding(tlv = 5)]
-    #[lightning_encoding(tlv = 5)]
     quantity: Option<Quantity>,
 
     /// If the price of the asset provided by fiat provider URL goes below this
     /// limit the merchant will not accept the payment and it will become
     /// expired
     #[network_encoding(tlv = 6)]
-    #[lightning_encoding(tlv = 6)]
     currency_requirement: Option<CurrencyData>,
 
     #[network_encoding(tlv = 7)]
-    #[lightning_encoding(tlv = 7)]
     merchant: Option<String>,
 
     #[network_encoding(tlv = 8)]
-    #[lightning_encoding(tlv = 8)]
     purpose: Option<String>,
 
     #[network_encoding(tlv = 9)]
-    #[lightning_encoding(tlv = 9)]
     details: Option<Details>,
 
     #[network_encoding(tlv = 0)]
-    #[lightning_encoding(tlv = 0)]
     #[cfg_attr(
         feature = "serde",
         serde(with = "As::<Option<(DisplayFromStr, DisplayFromStr)>>")
@@ -651,8 +632,6 @@ impl FromStr for Beneficiary {
     Display,
     StrictEncode,
     StrictDecode,
-    LightningEncode,
-    LightningDecode,
 )]
 #[display("{node_id}")]
 pub struct LnAddress {
@@ -689,8 +668,6 @@ pub struct LnAddress {
     Display,
     StrictEncode,
     StrictDecode,
-    LightningEncode,
-    LightningDecode,
 )]
 #[display("{short_channel_id}@{node_id}")]
 pub struct LnPathHint {
@@ -787,8 +764,6 @@ impl FromStr for AmountExt {
     Display,
     StrictEncode,
     StrictDecode,
-    LightningEncode,
-    LightningDecode,
 )]
 #[cfg_attr(
     feature = "serde",
@@ -857,10 +832,6 @@ impl StrictDecode for Iso4217 {
     }
 }
 
-impl lightning_encoding::Strategy for Iso4217 {
-    type Strategy = lightning_encoding::strategies::AsStrict;
-}
-
 #[cfg_attr(
     feature = "serde",
     serde_as,
@@ -878,8 +849,6 @@ impl lightning_encoding::Strategy for Iso4217 {
     Display,
     StrictEncode,
     StrictDecode,
-    LightningEncode,
-    LightningDecode,
 )]
 #[display("{coins}.{fractions} {iso4217}")]
 pub struct CurrencyData {
@@ -902,8 +871,6 @@ pub struct CurrencyData {
     From,
     StrictEncode,
     StrictDecode,
-    LightningEncode,
-    LightningDecode,
 )]
 #[cfg_attr(
     feature = "serde",
