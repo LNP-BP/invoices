@@ -417,6 +417,7 @@ impl Invoice {
         return true;
     }
 
+    #[cfg(feature = "rgb")]
     pub fn add_consignment_endpoint(
         &mut self,
         node: NodeAddr,
