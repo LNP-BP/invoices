@@ -123,7 +123,7 @@ pub struct Invoice {
 
     /// List of nodes which are able to accept RGB consignment
     #[network_encoding(tlv = 0x0a)]
-    consignment_endpoints: Vec<NodeAddr>,
+    consignment_endpoints: Vec<ConsignmentEndpoint>,
 
     #[network_encoding(unknown_tlvs)]
     #[cfg_attr(feature = "serde", serde(skip))]
@@ -420,16 +420,13 @@ impl Invoice {
     #[cfg(feature = "rgb")]
     pub fn add_consignment_endpoint(
         &mut self,
-        node: NodeAddr,
-    ) -> Result<bool, NotRgbInvoice> {
-        if !self.is_rgb() {
-            return Err(NotRgbInvoice);
-        }
+        node: ConsignmentEndpoint,
+    ) -> bool {
         if self.consignment_endpoints.contains(&node) {
-            return Ok(false);
+            return false;
         }
         self.consignment_endpoints.push(node);
-        Ok(true)
+        true
     }
 
     pub fn signature_hash(&self) -> MerkleNode {
@@ -480,6 +477,64 @@ impl<'a> Iterator for BeneficiariesIter<'a> {
             Some(&self.invoice.beneficiary)
         } else {
             self.invoice.alt_beneficiaries.get(self.index - 2)
+        }
+    }
+}
+
+/// An endpoint to a consignment exchange medium.
+#[derive(
+    Clone,
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Hash,
+    Debug,
+    Display,
+    StrictEncode,
+    StrictDecode,
+)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate")
+)]
+#[display(inner)]
+#[non_exhaustive]
+pub enum ConsignmentEndpoint {
+    /// Storm protocol
+    #[display("storm:{0}")]
+    Storm(NodeAddr),
+
+    /// RGB HTTP JSON-RPC protocol
+    #[display("rgbhttpjsonrpc:{0}")]
+    RgbHttpJsonRpc(String), // Url,
+}
+
+#[derive(
+    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug, Display, Error,
+)]
+#[display(doc_comments)]
+/// Incorrect consignment endpoint format
+pub struct ConsignmentEndpointParseError;
+
+impl FromStr for ConsignmentEndpoint {
+    type Err = ConsignmentEndpointParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut split = s.split(":");
+        match (split.next(), split.next()) {
+            (Some(protocol), Some(endpoint)) => match protocol {
+                "storm" => Ok(ConsignmentEndpoint::Storm(
+                    NodeAddr::from_str(endpoint)
+                        .or(Err(ConsignmentEndpointParseError))?,
+                )),
+                "rgbhttpjsonrpc" => Ok(ConsignmentEndpoint::RgbHttpJsonRpc(
+                    endpoint.to_string(),
+                )),
+                _ => Err(ConsignmentEndpointParseError),
+            },
+            _ => Err(ConsignmentEndpointParseError),
         }
     }
 }
