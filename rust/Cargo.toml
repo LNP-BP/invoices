@@ -1,6 +1,6 @@
 [package]
 name = "lnpbp-invoice"
-version = "0.8.0-rc.1"
+version = "0.8.0-rc.2"
 license = "MIT"
 authors = ["Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 description = "LNP/BP universal invoices library implementing LNPBP-38 standard"
