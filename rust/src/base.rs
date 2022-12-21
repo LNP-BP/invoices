@@ -522,9 +522,8 @@ impl FromStr for ConsignmentEndpoint {
     type Err = ConsignmentEndpointParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut split = s.split(":");
-        match (split.next(), split.next()) {
-            (Some(protocol), Some(endpoint)) => match protocol {
+        match s.split_once(":") {
+            Some((protocol, endpoint)) => match protocol {
                 "storm" => Ok(ConsignmentEndpoint::Storm(
                     NodeAddr::from_str(endpoint)
                         .or(Err(ConsignmentEndpointParseError))?,
