@@ -26,6 +26,7 @@ use bitcoin::hashes::sha256t;
 use bitcoin::hashes::{sha256d, Hash};
 use bitcoin::secp256k1::{self, schnorr};
 use bitcoin::Address;
+use bitcoin_scripts::hlc::HashLock;
 use bp::seals::txout::blind::ConcealedSeal;
 use commit_verify::merkle::MerkleNode;
 use internet2::addr::{NodeAddr, NodeId};
@@ -35,7 +36,7 @@ use lnpbp::bech32::{self, Blob, FromBech32Str, ToBech32String};
 use lnpbp::chain::{AssetId, Chain};
 use miniscript::{descriptor::DescriptorPublicKey, Descriptor};
 use strict_encoding::{StrictDecode, StrictEncode};
-use wallet::{hlc::HashLock, psbt::Psbt};
+use wallet::psbt::Psbt;
 
 /// Error when an RGB-only operation is attempted on a non-RGB invoice.
 #[derive(
