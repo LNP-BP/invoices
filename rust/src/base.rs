@@ -126,6 +126,10 @@ pub struct Invoice {
     #[network_encoding(tlv = 0x0a)]
     consignment_endpoints: Vec<ConsignmentEndpoint>,
 
+    /// Expected network
+    #[network_encoding(tlv = 0x0b)]
+    network: Option<Network>,
+
     #[network_encoding(unknown_tlvs)]
     #[cfg_attr(feature = "serde", serde(skip))]
     unknown: tlv::Stream,
@@ -180,6 +184,7 @@ impl Invoice {
             details: None,
             signature: None,
             consignment_endpoints: empty!(),
+            network: None,
             unknown: Default::default(),
         }
     }
@@ -430,6 +435,14 @@ impl Invoice {
         true
     }
 
+    pub fn set_network(&mut self, network: Network) -> bool {
+        if self.network == Some(network.clone()) {
+            return false;
+        }
+        self.network = Some(network);
+        return true;
+    }
+
     pub fn signature_hash(&self) -> MerkleNode {
         // TODO: Change signature encoding algorithm to a merkle-tree based
         MerkleNode::hash(
@@ -536,6 +549,53 @@ impl FromStr for ConsignmentEndpoint {
             },
             _ => Err(ConsignmentEndpointParseError),
         }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, StrictEncode, StrictDecode)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", rename_all = "lowercase")
+)]
+#[non_exhaustive]
+pub enum Network {
+    /// Bitcoin mainnet
+    Mainnet,
+
+    /// Bitcoin testnet version 3
+    Testnet3,
+
+    /// Bitcoin regtest network
+    Regtest,
+
+    /// Default bitcoin signet network
+    Signet,
+
+    /// Liquidv1 sidechain & network by Blockstream
+    LiquidV1,
+}
+
+#[derive(
+    Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug, Display, Error,
+)]
+#[display(doc_comments)]
+/// Chain is not supported by the Universal Invoice
+pub struct UnsupportedChain;
+
+impl TryFrom<Chain> for Network {
+    type Error = UnsupportedChain;
+
+    fn try_from(chain: Chain) -> Result<Self, Self::Error> {
+        let network = match chain {
+            Chain::Mainnet => Network::Mainnet,
+            Chain::Testnet3 => Network::Testnet3,
+            Chain::Regtest(_) => Network::Regtest,
+            Chain::Signet => Network::Signet,
+            Chain::LiquidV1 => Network::LiquidV1,
+            _ => return Err(UnsupportedChain),
+        };
+        Ok(network)
     }
 }
 
