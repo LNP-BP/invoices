@@ -9,7 +9,7 @@ homepage = "https://github.com/LNP-BP"
 keywords = ["bitcoin", "lightning", "lnp-bp", "rgb", "invoice"]
 categories = ["cryptography::cryptocurrencies"]
 readme = "../README.md"
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "invoice"
