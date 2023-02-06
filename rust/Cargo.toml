@@ -1,6 +1,6 @@
 [package]
 name = "lnpbp-invoice"
-version = "0.9.0-rc.1"
+version = "0.9.0"
 license = "MIT"
 authors = ["Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>"]
 description = "LNP/BP universal invoices library implementing LNPBP-38 standard"
@@ -25,15 +25,15 @@ crate-type = ["rlib", "staticlib"]
 # Dependencies on other LNP/BP repositories
 # -----------------------------------------
 amplify = "3.13.0"
-strict_encoding = { version = "0.9.0-rc.2", features = ["miniscript"] }
-commit_verify = "0.9.0-rc.1"
-bitcoin_scripts = "0.9.0-rc.1"
-descriptor-wallet = { version = "0.9.0-rc.1", features = ["keygen"] }
-internet2 = "0.9.0-rc.1"
-lnpbp = "0.9.0-rc.1"
-bp-core = "0.9.0-rc.1"
-lnp-core = { version = "0.9.0-rc.1", features = ["bifrost"] }
-rgb-core = { version = "0.9.0-rc.2", optional = true }
+strict_encoding = { version = "0.9.0", features = ["miniscript"] }
+commit_verify = "0.9.0"
+bitcoin_scripts = "0.9.0"
+descriptor-wallet = { version = "0.9.0", features = ["keygen"] }
+internet2 = "0.9.0"
+lnpbp = "0.9.0"
+bp-core = "0.9.0"
+lnp-core = { version = "0.9.1", features = ["bifrost"] }
+rgb-core = { version = "0.9.0", optional = true }
 # Dependencies on core rust-bitcoin ecosystem projects
 # ----------------------------------------------------
 bitcoin = { version = "0.29.2", features = ["rand"] }
