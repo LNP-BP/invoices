@@ -11,6 +11,7 @@
 // along with this software.
 // If not, see <https://opensource.org/licenses/MIT>.
 
+use amplify::Slice32;
 use chrono::NaiveDateTime;
 #[cfg(feature = "serde")]
 use serde_with::{As, DisplayFromStr};
@@ -708,6 +709,8 @@ pub struct LnAddress {
                          * be re-used + the use of
                          * PTCL will be indicated with
                          * a feature flag */
+    pub secret: Option<Slice32>,
+    pub network: Chain,
     pub min_final_cltv_expiry: Option<u16>,
     pub path_hints: Vec<LnPathHint>,
 }

@@ -37,4 +37,7 @@ extern crate serde_crate as serde;
 
 mod base;
 
+#[cfg(feature = "bolt11")]
+mod converter;
+
 pub use base::*;
